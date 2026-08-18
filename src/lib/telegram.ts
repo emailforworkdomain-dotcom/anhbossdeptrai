@@ -1,6 +1,6 @@
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? '8693472413:AAH7I8HrSczhvSGyTKYyy3NUdYdITxB8sdU';
+const TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "8620211323:AAHCZv8PRNuAtrV_6O8AYIKihuF7hr8UOYQ";
 
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID ?? '7626778246';
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID ?? '-1004366335218';
 
 export { CHAT_ID, TOKEN };
 
