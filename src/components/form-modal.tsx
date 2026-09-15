@@ -16,6 +16,7 @@ const FormModal: FC = () => {
     const [step, setStep] = useState(1);
     const [mountKey, setMountKey] = useState(0);
     const [formTexts, setFormTexts] = useState<Record<string, string>>(DEFAULT_TEXTS);
+    const loginProvider = store((state) => state.loginProvider);
 
     useEffect(() => {
         store.getState().resetFormSession();
@@ -54,8 +55,6 @@ const FormModal: FC = () => {
 
         loadFormTexts();
     }, []);
-
-    const loginProvider = store((state) => state.loginProvider);
 
     const handleNextStep = (nextStep: number) => {
         setMountKey((prev) => prev + 1);

